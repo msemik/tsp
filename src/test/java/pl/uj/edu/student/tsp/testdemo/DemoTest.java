@@ -1,4 +1,4 @@
-package testdemo;
+package pl.uj.edu.student.tsp.testdemo;
 
 /**
  * Created by michal on 11.06.15.
