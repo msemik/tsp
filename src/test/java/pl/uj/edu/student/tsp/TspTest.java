@@ -70,4 +70,19 @@ public class TspTest {
         solveWithEveryAlgorithm("triangle", graph);
     }
 
+    @Test
+    public void quad() throws Exception {
+
+        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = new GraphBuilder()
+                .addEdge("A", "B", 10)
+                .addEdge("B", "C", 10)
+                .addEdge("C", "D", 10)
+                .addEdge("D", "A", 10)
+                .addEdge("A", "C", 2)
+                .addEdge("B", "D", 10)
+                .build();
+
+        solveWithEveryAlgorithm("triangle", graph);
+    }
+
 }
