@@ -18,7 +18,7 @@ public class TspTest {
             String solverName = tspSolver.getClass().getName();
             System.out.println("Result for graph '" + graphName + "' by '" + solverName + "' with cost " + countCost(graph, result));
             printGraph(graph);
-            System.out.println("Execution time: " + (System.nanoTime() - beginTime) / 1000.0 / 1000.0 + " seconds\n-------");
+            System.out.println("Execution time: " + (System.nanoTime() - beginTime) / 1e9 + " seconds\n-------");
         }
     }
 
