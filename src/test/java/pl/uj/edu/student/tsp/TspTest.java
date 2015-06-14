@@ -98,4 +98,25 @@ public class TspTest {
         solveWithEveryAlgorithm("christofidesWikipediaExample", graph);
     }
 
+    @Test
+    public void christofidesWikipediaExample2() throws Exception {
+
+        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = new GraphBuilder()
+                .addEdge("A", "B", 5)
+                .addEdge("B", "C", 5)
+
+                .addEdge("D", "B", 5)
+                .addEdge("B", "E", 5)
+
+                .addEdge("A", "C", 10)  //zamiana tego z poniższym daje inne wyniki
+                .addEdge("D", "E", 6)
+
+                .addEdge("A", "D", 10)
+                .addEdge("A", "E", 10)
+                .addEdge("E", "C", 10)
+                .addEdge("D", "C", 10)
+                .build();
+
+        solveWithEveryAlgorithm("christofidesWikipediaExample2", graph);
+    }
 }
