@@ -1,12 +1,18 @@
 package pl.uj.edu.student.tsp;
 
+import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.*;
+
+import static java.lang.String.format;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 public class TspTest {
     List<TspSolver> tspSolvers;
@@ -18,9 +24,77 @@ public class TspTest {
             String solverName = tspSolver.getClass().getName();
             System.out.println("Result for graph '" + graphName + "' by '" + solverName + "' with cost " + countCost(graph, result));
             printGraph(graph);
-            System.out.println("Execution time: " + (System.nanoTime() - beginTime) / 1000.0 / 1000.0 + " seconds\n-------");
+            assertNoLoops(graph, result);
+            assertCorrectEdgesAmount(graph, result);// correct edges amount mean correct vertices amount.
+            assertUniqueVertices(graph, result);
+            System.out.println("Execution time: " + (System.nanoTime() - beginTime) / 1e9 + " seconds\n-------");
         }
     }
+
+    private void assertNoLoops(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, Collection<DefaultWeightedEdge> result) {
+        for (DefaultWeightedEdge e : result) {
+            assertThat(format("%s is invalid edge. Loops are not allowed", e), distinctVerticesInEdge(graph, e), is(true));
+        }
+    }
+
+    private boolean distinctVerticesInEdge(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, DefaultWeightedEdge e) {
+        return !graph.getEdgeSource(e).equals(graph.getEdgeTarget(e));
+    }
+
+    private void assertCorrectEdgesAmount(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, Collection<DefaultWeightedEdge> result) {
+        int verticesNumber = graph.vertexSet().size();
+        int verticesInTour = result.size();
+        assertThat(
+                format("edges number in tour (%d) must be equal to total vertices in graph (%d)", verticesInTour, verticesNumber),
+                //In other words, vertices number in graph must be equal to vertices number in tour.
+                verticesNumber, is(verticesInTour));
+    }
+
+    private void assertUniqueVertices(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, Collection<DefaultWeightedEdge> result) {
+        List<String> visitedVertices = new ArrayList<>();
+        DefaultWeightedEdge lastEdge = null;
+        String begin = getBeginVertex(graph, result);
+        for (DefaultWeightedEdge edge : result) {
+            if (lastEdge == null) {
+                //wykona się przy pierwszej krawędzi
+                //ważne jest aby dodać wierzchołki odwiedzone w odpowiedniej kolejności.
+                lastEdge = edge;
+                visitedVertices.add(begin);
+                visitedVertices.add(Graphs.getOppositeVertex(graph, edge, begin));
+            } else {
+                String lastVertex = visitedVertices.get(visitedVertices.size() - 1);
+                assertThat(
+                        format("%s - %s is not a valid path fragment", lastEdge, edge),
+                        vertexBelongToEdge(graph, edge, lastVertex), is(true));
+
+                String v = Graphs.getOppositeVertex(graph, edge, lastVertex);
+                assertThat(format("%s may not be visited twice in tour", v), result, not(contains(v)));
+                visitedVertices.add(v);
+                lastEdge = edge;
+            }
+        }
+        assertThat("not a valid tour (last edge is not connected with first vertex)", vertexBelongToEdge(graph, lastEdge, begin), is(true));
+    }
+
+    private String getBeginVertex(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, Collection<DefaultWeightedEdge> result) {
+        Iterator<DefaultWeightedEdge> iterator = result.iterator();
+        DefaultWeightedEdge firstEdge = iterator.next();
+        DefaultWeightedEdge secondEdge = iterator.next();
+
+        String v1 = graph.getEdgeSource(firstEdge);
+        String v2 = graph.getEdgeTarget(firstEdge);
+
+        if (!vertexBelongToEdge(graph, secondEdge, v1))
+            return v1;
+        if (!vertexBelongToEdge(graph, secondEdge, v2))
+            return v2;
+        throw new IllegalStateException(format("Not a valid path fragment %s - %s", firstEdge, secondEdge));
+    }
+
+    private boolean vertexBelongToEdge(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, DefaultWeightedEdge edge, String v) {
+        return graph.getEdgeSource(edge).equals(v) || graph.getEdgeTarget(edge).equals(v);
+    }
+
 
     private double countCost(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, Collection<DefaultWeightedEdge> edges) {
         Optional<Double> reduce = edges.stream().map(graph::getEdgeWeight).reduce((x, y) -> x + y);
@@ -118,5 +192,30 @@ public class TspTest {
                 .build();
 
         solveWithEveryAlgorithm("christofidesWikipediaExample2", graph);
+    }
+
+
+    @Test
+    public void exampleFromPhoto() throws Exception {
+
+        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = new GraphBuilder()
+                //krawędzie w cyklu.
+                .addEdge("A", "B", 5)
+                .addEdge("B", "C", 5)
+                .addEdge("C", "E", 5)
+                .addEdge("B", "E", 5)
+                .addEdge("B", "D", 5)
+                .addEdge("D", "A", 5)
+
+                        //możliwe skoki
+                .addEdge("A", "E", 10) //zmiana tych dwóch zmienia wyniki
+                .addEdge("D", "C", 6)
+
+
+                .addEdge("A", "C", 10)
+                .addEdge("D", "E", 10)
+                .build();
+
+        solveWithEveryAlgorithm("exampleFromPhoto", graph);
     }
 }
