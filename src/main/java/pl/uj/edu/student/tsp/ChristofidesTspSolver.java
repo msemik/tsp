@@ -75,12 +75,28 @@ public class ChristofidesTspSolver implements TspSolver {
         WeightedMultigraph<String, DefaultWeightedEdge> multigraph = new WeightedMultigraph<>(DefaultWeightedEdge.class);
 
         mst.edgeSet().forEach(edge -> {
-            DefaultWeightedEdge addedEdge = multigraph.addEdge(mst.getEdgeSource(edge), mst.getEdgeTarget(edge));
+            String source = mst.getEdgeSource(edge);
+            String target = mst.getEdgeTarget(edge);
+            if (!multigraph.vertexSet().contains(source)) {
+                multigraph.addVertex(source);
+            }
+            if (!multigraph.vertexSet().contains(target)) {
+                multigraph.addVertex(target);
+            }
+            DefaultWeightedEdge addedEdge = multigraph.addEdge(source, target);
             multigraph.setEdgeWeight(addedEdge, mst.getEdgeWeight(edge));
         });
 
         perfectMatchingGraph.edgeSet().forEach(edge -> {
-            DefaultWeightedEdge addedEdge = multigraph.addEdge(perfectMatchingGraph.getEdgeSource(edge), perfectMatchingGraph.getEdgeTarget(edge));
+            String source = perfectMatchingGraph.getEdgeSource(edge);
+            String target = perfectMatchingGraph.getEdgeTarget(edge);
+            if (!multigraph.vertexSet().contains(source)) {
+                multigraph.addVertex(source);
+            }
+            if (!multigraph.vertexSet().contains(target)) {
+                multigraph.addVertex(target);
+            }
+            DefaultWeightedEdge addedEdge = multigraph.addEdge(source, target);
             multigraph.setEdgeWeight(addedEdge, perfectMatchingGraph.getEdgeWeight(edge));
         });
 

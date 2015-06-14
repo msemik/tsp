@@ -45,14 +45,6 @@ public class TspTest {
         tspSolvers = new ArrayList<>();
         tspSolvers.add(new NearestNeighbourTspSolver());
         tspSolvers.add(new ChristofidesTspSolver());
-        //fake solvers
-
-        tspSolvers.add(new TspSolver() {
-            @Override
-            public Collection<DefaultWeightedEdge> solve(SimpleWeightedGraph<String, DefaultWeightedEdge> graph) {
-                return graph.edgeSet();
-            }
-        });
     }
 
     @Before
@@ -61,7 +53,6 @@ public class TspTest {
     }
 
     @Test
-    @Ignore
     public void triangle() throws Exception {
 
         SimpleWeightedGraph<String, DefaultWeightedEdge> graph = new GraphBuilder()
@@ -74,7 +65,6 @@ public class TspTest {
     }
 
     @Test
-    @Ignore
     public void quad() throws Exception {
 
         SimpleWeightedGraph<String, DefaultWeightedEdge> graph = new GraphBuilder()
@@ -105,7 +95,7 @@ public class TspTest {
                 .addEdge("D", "C", 1)
                 .build();
 
-        solveWithEveryAlgorithm("triangle", graph);
+        solveWithEveryAlgorithm("christofidesWikipediaExample", graph);
     }
 
 }

@@ -16,6 +16,10 @@ public class MinimumSumPerfectMatchingAdapter implements PerfectMatchingFinder {
 
     @Override
     public SimpleWeightedGraph<String, DefaultWeightedEdge> findPerfectMatching(SimpleWeightedGraph<String, DefaultWeightedEdge> graph) {
+        if (graph.vertexSet().size() <= 2) {
+            return graph;
+        }
+
         int n = graph.vertexSet().size();
         double weight[][]= new double[n + 1][n + 1];
         int sol[] = new int[n + 1];
