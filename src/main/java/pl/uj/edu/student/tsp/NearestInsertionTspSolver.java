@@ -1,87 +1,161 @@
 package pl.uj.edu.student.tsp;
 
-import com.google.common.collect.Sets;
-import org.jgrapht.GraphPath;
-import org.jgrapht.Graphs;
-import org.jgrapht.alg.FloydWarshallShortestPaths;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
 import java.util.*;
 
 public class NearestInsertionTspSolver implements TspSolver {
+    private static class InsertionCandidate {
+        private DefaultWeightedEdge currentEdge = null;
+        private double cost = 0;
+        private DefaultWeightedEdge firstNewEdge;
+        private DefaultWeightedEdge secondNewEdge;
+
+        public InsertionCandidate(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, String vertex, DefaultWeightedEdge edge) {
+            this.currentEdge = edge;
+            String edgeSource = graph.getEdgeSource(edge);
+            String edgeTarget = graph.getEdgeTarget(edge);
+            this.firstNewEdge = graph.getEdge(edgeSource, vertex);
+            this.secondNewEdge = graph.getEdge(vertex, edgeTarget);
+            this.cost = graph.getEdgeWeight(firstNewEdge) + graph.getEdgeWeight(secondNewEdge);
+        }
+
+        public DefaultWeightedEdge getCurrentEdge() {
+            return currentEdge;
+        }
+
+        public boolean isBetterThan(InsertionCandidate candidate) {
+            return cost < candidate.cost;
+        }
+
+        public DefaultWeightedEdge getFirstNewEdge() {
+            return firstNewEdge;
+        }
+
+        public DefaultWeightedEdge getSecondNewEdge() {
+            return secondNewEdge;
+        }
+
+        @Override
+        public String toString() {
+            return "InsertionCandidate{" +
+                    "currentEdge=" + currentEdge +
+                    ", cost=" + cost +
+                    ", firstNewEdge=" + firstNewEdge +
+                    ", secondNewEdge=" + secondNewEdge +
+                    '}';
+        }
+    }
+
     @Override
     public Collection<DefaultWeightedEdge> solve(SimpleWeightedGraph<String, DefaultWeightedEdge> graph) {
-        List<String> tour = new ArrayList<>();
-        tour.addAll(find3Clique(graph));
-        FloydWarshallShortestPaths shortestPaths = new FloydWarshallShortestPaths(graph);
+        List<DefaultWeightedEdge> tour = new LinkedList<>();
+        Set<String> verticesInTour = new HashSet<>();
+        tour.addAll(findSmallest3Clique(graph));
 
-        while (tour.size() < graph.edgeSet().size()) {
-            DefaultWeightedEdge closest = minimumWeightEdgePointingOutsideTour(graph, tour);
-            String vertexOutsideTour = vertexOutsideTourFromEdge(graph, tour, closest);
-            String vertexInTour = Graphs.getOppositeVertex(graph, closest, vertexOutsideTour);
-            HashSet<String> secondEdgeCandidates = new HashSet<>(tour);
-            secondEdgeCandidates.remove(vertexInTour);
-            GraphPath<String, DefaultWeightedEdge> shortestPath = null;
-            for (String candidate : secondEdgeCandidates) {
-                GraphPath path = shortestPaths.getShortestPath(vertexOutsideTour, candidate);
-                if (shortestPath == null || path.getWeight() < shortestPath.getWeight())
-                    shortestPath = path;
-            }
-            String endVertex = shortestPath.getEndVertex();
-            for (int i = 0; i < tour.size(); i++) {
-                if (tour.get(i).equals(vertexInTour)) {
+        for (DefaultWeightedEdge edge : tour) {
+            addEdgeVerticesToTour(graph, verticesInTour, edge);
+        }
 
+        while (tour.size() < graph.vertexSet().size()) {
+            InsertionCandidate bestCandidate = null;
+            for (DefaultWeightedEdge edge : tour) {
+                for (String v : graph.vertexSet()) {
+                    if (vertexOutsideTour(verticesInTour, v)) {
+                        if (bestCandidate == null)
+                            bestCandidate = new InsertionCandidate(graph, v, edge);
+                        else {
+                            InsertionCandidate candidate = new InsertionCandidate(graph, v, edge);
+                            if (candidate.isBetterThan(bestCandidate))
+                                bestCandidate = candidate;
+                        }
+                    }
                 }
             }
-
-
+            addCandidateToTour(graph, tour, bestCandidate);
+            addEdgeVerticesToTour(graph, verticesInTour, bestCandidate.getFirstNewEdge());
+            addEdgeVerticesToTour(graph, verticesInTour, bestCandidate.getSecondNewEdge());
         }
-
-        return toEdgeList(graph, tour);
+        return tour;
     }
 
-    private String vertexOutsideTourFromEdge(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, List<String> tour, DefaultWeightedEdge edge) {
-        String v = graph.getEdgeSource(edge);
-        if (!tour.contains(v))
-            return v;
-        return graph.getEdgeTarget(edge);
+    private void addEdgeVerticesToTour(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, Set<String> verticesInTour, DefaultWeightedEdge edge) {
+        verticesInTour.add(graph.getEdgeTarget(edge));
+        verticesInTour.add(graph.getEdgeSource(edge));
     }
 
-    private DefaultWeightedEdge minimumWeightEdgePointingOutsideTour(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, List<String> tour) {
-        DefaultWeightedEdge closest = null;
+    private boolean vertexOutsideTour(Set<String> verticesInTour, String v) {
+        return !verticesInTour.contains(v);
+    }
 
-        for (String v : Sets.difference(graph.vertexSet(), new HashSet<>(tour))) {
-            for (String tourVertex : tour) {
-                DefaultWeightedEdge e = graph.getEdge(tourVertex, v);
-                if (closest == null || graph.getEdgeWeight(e) < graph.getEdgeWeight(closest))
-                    closest = e;
+    private void addCandidateToTour(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, List<DefaultWeightedEdge> tour, InsertionCandidate candidate) {
+        int i = tour.indexOf(candidate.getCurrentEdge());
+        DefaultWeightedEdge nextEdge = tour.get(i + 1 < tour.size() ? i + 1 : 0);
+        if (hasCommonVertex(graph, candidate.getSecondNewEdge(), nextEdge)) {
+            tour.set(i, candidate.getFirstNewEdge());
+            tour.add(i + 1, candidate.getSecondNewEdge());
+        } else {
+            tour.set(i, candidate.getSecondNewEdge());
+            tour.add(i + 1, candidate.getFirstNewEdge());
+        }
+    }
+
+    private boolean hasCommonVertex(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, DefaultWeightedEdge e1, DefaultWeightedEdge e2) {
+        String e1Source = graph.getEdgeSource(e1);
+        String e1Target = graph.getEdgeTarget(e1);
+        String e2Source = graph.getEdgeSource(e2);
+        String e2Target = graph.getEdgeTarget(e2);
+        return e1Source.equals(e2Source) || e1Source.equals(e2Target) || e1Target.equals(e2Source) || e1Target.equals(e2Target);
+    }
+
+    private Collection<DefaultWeightedEdge> findSmallest3Clique(SimpleWeightedGraph<String, DefaultWeightedEdge> graph) {
+        class CliqueCandidate {
+            private DefaultWeightedEdge e1;
+            private DefaultWeightedEdge e2;
+            private DefaultWeightedEdge e3;
+            private double cost = 0;
+
+            CliqueCandidate(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, String v1, String v2, String v3) {
+                e1 = graph.getEdge(v1, v2);
+                e2 = graph.getEdge(v2, v3);
+                e3 = graph.getEdge(v3, v1);
+                cost = graph.getEdgeWeight(e1) + graph.getEdgeWeight(e2) + graph.getEdgeWeight(e3);
+            }
+
+            public boolean isSmallerThan(CliqueCandidate cliqueCandidate) {
+                return cost < cliqueCandidate.cost;
+
+            }
+
+            public Collection<DefaultWeightedEdge> toEdgeList() {
+                return Arrays.asList(e1, e2, e3);
+            }
+
+            @Override
+            public String toString() {
+                return "CliqueCandidate{" +
+                        "e1=" + e1 +
+                        ", e2=" + e2 +
+                        ", e3=" + e3 +
+                        ", cost=" + cost +
+                        '}';
             }
         }
-        return closest;
-    }
 
-    private Collection<DefaultWeightedEdge> toEdgeList(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, List<String> path) {
-
-        List<DefaultWeightedEdge> l = new ArrayList<>();
-        for (int i = 0; i + 1 < path.size(); i++) {
-            l.add(graph.getEdge(path.get(i), path.get(i + 1)));
-        }
-        return l;
-    }
-
-    private Collection<String> find3Clique(SimpleWeightedGraph<String, DefaultWeightedEdge> graph) {
+        CliqueCandidate bestCandidate = null;
         for (String v1 : graph.vertexSet()) {
             for (String v2 : graph.vertexSet()) {
                 for (String v3 : graph.vertexSet()) {
-                    if (!v1.equals(v2) && !v2.equals(v3)) {
-                        if (graph.containsEdge(v1, v2) && graph.containsEdge(v2, v3) && graph.containsEdge(v3, v1))
-                            return Arrays.asList(v1, v2, v3);
+                    if (!v1.equals(v2) && !v2.equals(v3) && ! v1.equals(v3)) {
+                        CliqueCandidate candidate = new CliqueCandidate(graph, v1, v2, v3);
+                        if (bestCandidate == null || candidate.isSmallerThan(bestCandidate))
+                            bestCandidate = candidate;
                     }
                 }
             }
         }
-        return Collections.emptyList();
+        return bestCandidate == null ? Collections.emptyList() : bestCandidate.toEdgeList();
     }
 
 }

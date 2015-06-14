@@ -118,7 +118,8 @@ public class TspTest {
     public void setTspSolvers() {
         tspSolvers = new ArrayList<>();
         tspSolvers.add(new NearestNeighbourTspSolver());
-        tspSolvers.add(new ChristofidesTspSolver());
+        tspSolvers.add(new ChristofidesTspSolver());;
+        tspSolvers.add(new NearestInsertionTspSolver());
     }
 
     @Before
