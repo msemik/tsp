@@ -38,7 +38,7 @@ public class MinimumSumPerfectMatchingAdapter implements PerfectMatchingFinder {
         UndirectedWeightedGraphBuilder<String, DefaultWeightedEdge, SimpleWeightedGraph<String, DefaultWeightedEdge>> undirectedWeightedGraphBuilder
                 = new UndirectedWeightedGraphBuilder<>(new SimpleWeightedGraph<>(DefaultWeightedEdge.class));
 
-        for (int i = 1; i <= n / 2; i++) {
+        for (int i = 1; i <= n; i++) {
             String source = vertices.get(i - 1);
             String target = vertices.get(sol[i] - 1);
 
