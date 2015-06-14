@@ -130,7 +130,7 @@ public class ChristofidesTspSolver implements TspSolver {
                 if (nextUnvisitedVertexIndex != -1) {
                     String newTarget = eulerianCircuit.get(nextUnvisitedVertexIndex);
                     undirectedWeightedGraphBuilder.addEdge(source, newTarget, graph.getEdgeWeight(graph.getEdge(source, newTarget)));
-                    i = nextUnvisitedVertexIndex + 1;
+                    i = nextUnvisitedVertexIndex;
                 } else {
                     String newTarget = eulerianCircuit.get(eulerianCircuit.size() - 1);
                     undirectedWeightedGraphBuilder.addEdge(source, newTarget, graph.getEdgeWeight(graph.getEdge(source, newTarget)));
