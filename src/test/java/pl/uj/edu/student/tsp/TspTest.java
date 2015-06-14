@@ -119,4 +119,29 @@ public class TspTest {
 
         solveWithEveryAlgorithm("christofidesWikipediaExample2", graph);
     }
+
+
+    @Test
+    public void exampleFromPhoto() throws Exception {
+
+        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = new GraphBuilder()
+                //krawędzie w cyklu.
+                .addEdge("A", "B", 5)
+                .addEdge("B", "C", 5)
+                .addEdge("C", "E", 5)
+                .addEdge("B", "E", 5)
+                .addEdge("B", "D", 5)
+                .addEdge("D", "A", 5)
+
+                //możliwe skoki
+                .addEdge("A", "E", 10) //zmiana tych dwóch zmienia wyniki
+                .addEdge("D", "C", 6)
+
+
+                .addEdge("A", "C", 10)
+                .addEdge("D", "E", 10)
+                .build();
+
+        solveWithEveryAlgorithm("exampleFromPhoto", graph);
+    }
 }
