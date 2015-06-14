@@ -7,32 +7,32 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Created by michal on 13.06.15.
- */
 public class NearestNeighbourTspSolver implements TspSolver {
     @Override
     public Collection<DefaultWeightedEdge> solve(SimpleWeightedGraph<String, DefaultWeightedEdge> graph) {
         List<DefaultWeightedEdge> l = new ArrayList<>();
-        Set<String> visitedVertexes = new HashSet<>();
+        Set<String> visitedVertices = new HashSet<>();
 
         String currentVertex = graph.vertexSet().iterator().next();
+        String firstVertex = currentVertex;
         while (true) {
             Set<DefaultWeightedEdge> edges;
             edges = graph.edgesOf(currentVertex);
-            edges = removeEdgesContainingVertexes(graph, edges, visitedVertexes);
+            edges = removeEdgesContainingVertices(graph, edges, visitedVertices);
 
-            if (edges.isEmpty())
+            if (edges.isEmpty()) {
+                l.add(graph.getEdge(currentVertex, firstVertex));
                 return l;
+            }
 
             DefaultWeightedEdge edge = minimumWeight(edges, graph);
             l.add(edge);
-            visitedVertexes.add(currentVertex);
+            visitedVertices.add(currentVertex);
             currentVertex = Graphs.getOppositeVertex(graph, edge, currentVertex);
         }
     }
 
-    private Set<DefaultWeightedEdge> removeEdgesContainingVertexes(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, Set<DefaultWeightedEdge> edges, Set<String> visitedVertexes) {
+    private Set<DefaultWeightedEdge> removeEdgesContainingVertices(SimpleWeightedGraph<String, DefaultWeightedEdge> graph, Set<DefaultWeightedEdge> edges, Set<String> visitedVertexes) {
         return edges
                 .stream()
                 .filter(edge -> !visitedVertexes.contains(graph.getEdgeSource(edge)) && !visitedVertexes.contains(graph.getEdgeTarget(edge)))
