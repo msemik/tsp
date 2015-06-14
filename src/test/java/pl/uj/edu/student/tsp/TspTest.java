@@ -4,8 +4,11 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 import static java.lang.String.format;
@@ -103,22 +106,26 @@ public class TspTest {
 
 
     private void printGraph(SimpleWeightedGraph<String, DefaultWeightedEdge> graph) {
-        System.out.print("(" + graph.vertexSet() + ", [");
-        for (Iterator<DefaultWeightedEdge> iterator = graph.edgeSet().iterator(); iterator.hasNext(); ) {
-            DefaultWeightedEdge edge = iterator.next();
-            System.out.print(edge + " " + graph.getEdgeWeight(edge));
-            if (iterator.hasNext())
-                System.out.print(", ");
+        if (graph.vertexSet().size() > 10) {
+            System.out.println("(big graph)");
+        } else {
+            System.out.print("(" + graph.vertexSet() + ", [");
+            for (Iterator<DefaultWeightedEdge> iterator = graph.edgeSet().iterator(); iterator.hasNext(); ) {
+                DefaultWeightedEdge edge = iterator.next();
+                System.out.print(edge + " " + graph.getEdgeWeight(edge));
+                if (iterator.hasNext())
+                    System.out.print(", ");
+            }
+            System.out.println("])");
         }
-        System.out.println("])");
-
     }
 
     @Before
     public void setTspSolvers() {
         tspSolvers = new ArrayList<>();
         tspSolvers.add(new NearestNeighbourTspSolver());
-        tspSolvers.add(new ChristofidesTspSolver());;
+        tspSolvers.add(new ChristofidesTspSolver());
+        ;
         tspSolvers.add(new NearestInsertionTspSolver());
     }
 
@@ -218,5 +225,59 @@ public class TspTest {
                 .build();
 
         solveWithEveryAlgorithm("exampleFromPhoto", graph);
+    }
+
+    @Test
+    public void about30WesternSaharaCities() throws Exception {
+        //http://www.math.uwaterloo.ca/tsp/world/countries.html#QA
+        //Optimal tour: 27603
+        String filename = "src/test/java/pl/uj/edu/student/tsp/wi29.tsp";
+        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = getGraphFromTspLibFormatFile(filename);
+        solveWithEveryAlgorithm("about30WesternSaharaCities", graph);
+    }
+
+    @Test
+    public void about200QatarCities() throws Exception {
+        //Optimal tour: 9352
+        String filename = "src/test/java/pl/uj/edu/student/tsp/qa194.tsp";
+        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = getGraphFromTspLibFormatFile(filename);
+        solveWithEveryAlgorithm("about200QatarCities", graph);
+    }
+
+    @Test
+    public void about700UruguayCities() throws Exception {
+        //Optimal tour: 79114
+        String filename = "src/test/java/pl/uj/edu/student/tsp/uy734.tsp";
+        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = getGraphFromTspLibFormatFile(filename);
+        solveWithEveryAlgorithm("about700UruguayCities", graph);
+    }
+
+    @Test
+    @Ignore
+    public void about10000FinlandCities() throws Exception {
+        //Known tour: 520,527
+        String filename = "src/test/java/pl/uj/edu/student/tsp/fi10639.tsp";
+        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = getGraphFromTspLibFormatFile(filename);
+        solveWithEveryAlgorithm("about10000FinlandCities", graph);
+    }
+
+    private SimpleWeightedGraph<String, DefaultWeightedEdge> getGraphFromTspLibFormatFile(String filename) throws FileNotFoundException {
+        Scanner scanner = new Scanner(new FileInputStream(filename));
+        do {
+            String s = scanner.nextLine();
+            if (s.trim().equals("NODE_COORD_SECTION"))
+                break;
+        } while (true);
+
+        CoordinateBasedGraphBuilder graphBuilder = new CoordinateBasedGraphBuilder();
+
+        while (scanner.hasNextLine()) {
+            String s = scanner.nextLine();
+            if (s.trim().equals("EOF"))
+                break;
+            String[] split = s.trim().split("\\s+");
+            graphBuilder.addVertex(split[0], Double.valueOf(split[1]), Double.valueOf(split[2]));
+        }
+        return graphBuilder.build();
     }
 }
