@@ -22,7 +22,7 @@ public class TspTest {
 
     private void solveWithEveryAlgorithm(String graphName, SimpleWeightedGraph<String, DefaultWeightedEdge> graph) {
         for (TspSolver tspSolver : tspSolvers) {
-            long beginTime = System.nanoTime();
+            long beginTime = System.currentTimeMillis();
             Collection<DefaultWeightedEdge> result = tspSolver.solve(graph);
             String solverName = tspSolver.getClass().getName();
             System.out.println("Result for graph '" + graphName + "' by '" + solverName + "' with cost " + countCost(graph, result));
@@ -30,7 +30,9 @@ public class TspTest {
             assertNoLoops(graph, result);
             assertCorrectEdgesAmount(graph, result);// correct edges amount mean correct vertices amount.
             assertUniqueVertices(graph, result);
-            System.out.println("Execution time: " + (System.nanoTime() - beginTime) / 1e9 + " seconds\n-------");
+            double totalSeconds = (System.currentTimeMillis() - beginTime) / 1e3;
+            System.out.println("Execution time: " + totalSeconds + " seconds\n-------");
+            System.out.flush();
         }
     }
 
@@ -125,7 +127,6 @@ public class TspTest {
         tspSolvers = new ArrayList<>();
         tspSolvers.add(new NearestNeighbourTspSolver());
         tspSolvers.add(new ChristofidesTspSolver());
-        ;
         tspSolvers.add(new NearestInsertionTspSolver());
     }
 
@@ -230,35 +231,38 @@ public class TspTest {
     @Test
     public void about30WesternSaharaCities() throws Exception {
         //http://www.math.uwaterloo.ca/tsp/world/countries.html#QA
-        //Optimal tour: 27603
         String filename = "src/test/java/pl/uj/edu/student/tsp/wi29.tsp";
         SimpleWeightedGraph<String, DefaultWeightedEdge> graph = getGraphFromTspLibFormatFile(filename);
-        solveWithEveryAlgorithm("about30WesternSaharaCities", graph);
+        solveWithEveryAlgorithm("about30WesternSaharaCities, optimal tour: 27603", graph);
     }
 
     @Test
     public void about200QatarCities() throws Exception {
-        //Optimal tour: 9352
         String filename = "src/test/java/pl/uj/edu/student/tsp/qa194.tsp";
         SimpleWeightedGraph<String, DefaultWeightedEdge> graph = getGraphFromTspLibFormatFile(filename);
-        solveWithEveryAlgorithm("about200QatarCities", graph);
+        solveWithEveryAlgorithm("about200QatarCities, optimal tour: 9352", graph);
     }
 
     @Test
     public void about700UruguayCities() throws Exception {
-        //Optimal tour: 79114
         String filename = "src/test/java/pl/uj/edu/student/tsp/uy734.tsp";
         SimpleWeightedGraph<String, DefaultWeightedEdge> graph = getGraphFromTspLibFormatFile(filename);
-        solveWithEveryAlgorithm("about700UruguayCities", graph);
+        solveWithEveryAlgorithm("about700UruguayCities, optimal tour: 79114", graph);
+    }
+
+    @Test
+    public void about2000CitiesInOman() throws Exception {
+        String filename = "src/test/java/pl/uj/edu/student/tsp/mu1979.tsp";
+        SimpleWeightedGraph<String, DefaultWeightedEdge> graph = getGraphFromTspLibFormatFile(filename);
+        solveWithEveryAlgorithm("about2000CitiesInOman, optimal tour: 86891", graph);
     }
 
     @Test
     @Ignore
     public void about10000FinlandCities() throws Exception {
-        //Known tour: 520,527
         String filename = "src/test/java/pl/uj/edu/student/tsp/fi10639.tsp";
         SimpleWeightedGraph<String, DefaultWeightedEdge> graph = getGraphFromTspLibFormatFile(filename);
-        solveWithEveryAlgorithm("about10000FinlandCities", graph);
+        solveWithEveryAlgorithm("about10000FinlandCities, known tour: 520,527", graph);
     }
 
     private SimpleWeightedGraph<String, DefaultWeightedEdge> getGraphFromTspLibFormatFile(String filename) throws FileNotFoundException {
