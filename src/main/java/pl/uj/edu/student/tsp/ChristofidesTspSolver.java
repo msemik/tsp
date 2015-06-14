@@ -7,7 +7,10 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import org.jgrapht.graph.WeightedMultigraph;
 import org.jgrapht.graph.builder.UndirectedWeightedGraphBuilder;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by alanhawrot
@@ -60,8 +63,12 @@ public class ChristofidesTspSolver implements TspSolver {
             vertices.stream().filter(target -> !source.equals(target) && !completeGraph.containsEdge(source, target)).forEach(target -> {
                 DefaultWeightedEdge edge = graph.getEdge(source, target);
                 Double weight = graph.getEdgeWeight(edge);
-                completeGraph.addVertex(source);
-                completeGraph.addVertex(target);
+                if (!completeGraph.vertexSet().contains(source)) {
+                    completeGraph.addVertex(source);
+                }
+                if (!completeGraph.vertexSet().contains(target)) {
+                    completeGraph.addVertex(target);
+                }
                 DefaultWeightedEdge addedEdge = completeGraph.addEdge(source, target);
                 completeGraph.setEdgeWeight(addedEdge, weight);
             });
