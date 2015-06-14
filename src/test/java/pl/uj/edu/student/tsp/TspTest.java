@@ -76,7 +76,7 @@ public class TspTest {
                 .addEdge("B", "D", 10)
                 .build();
 
-        solveWithEveryAlgorithm("triangle", graph);
+        solveWithEveryAlgorithm("quad", graph);
     }
 
     @Test
